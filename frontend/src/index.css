@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Remove Bootstrap defaults for better dark theme */
+.container-lg {
+  max-width: 1200px;
+}
+
+/* Ensure Bootstrap doesn't override dark theme */
+.btn-primary {
+  background-color: #1f6feb !important;
+  border-color: #1f6feb !important;
+}
+
+.btn-primary:hover {
+  background-color: #1a5bb8 !important;
+  border-color: #1a5bb8 !important;
+}
+
