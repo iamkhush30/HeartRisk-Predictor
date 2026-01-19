@@ -1,9 +1,9 @@
-# Cardiovascular Disease Prediction Model
+# HeartRisk-Predictor Model
 
 This repository contains a Machine Learning project focused on predicting the presence or absence of cardiovascular disease (CVD) in patients based on various health metrics and lifestyle factors.
 
 ## 📌 Project Overview
-Cardiovascular diseases are the leading cause of death globally. This project aims to build a predictive model that can assist healthcare professionals in identifying high-risk patients early using data-driven insights. 
+HeartRisk-Predictor are the leading cause of death globally. This project aims to build a predictive model that can assist healthcare professionals in identifying high-risk patients early using data-driven insights. 
 
 The project involves data cleaning, exploratory data analysis (EDA), feature engineering, and the implementation of classification algorithms to achieve high prediction accuracy.
 
