@@ -68,7 +68,7 @@ body {
 
 /* Intro section */
 .intro-section {
-  background: linear-gradient(135deg, #1f6feb 0%, #238636 100%);
+  background: linear-gradient(135deg, #1f6feb 0%, #7f3da2 70% );
   color: #ffffff;
   padding: 1.5rem;
   border-radius: 12px;
@@ -290,7 +290,7 @@ body {
 .form-label {
   color: #c9d1d9;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 1.0rem;
 }
 
 .form-control, .form-select {
