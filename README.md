@@ -51,7 +51,7 @@ The dataset consists of 70,000 patient records with 11 features and 1 target var
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Gaurav1665/ML---Cardiovascular-Disease-Prediction-Model
+git clone [https://github.com/Gaurav1665/ML---Cardiovascular-Disease-Prediction-Model](https://github.com/iamkhush30/HeartRisk-Predictor)
 cd ML---Cardiovascular-Disease-Model
 ```
 
