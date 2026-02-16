@@ -2,11 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone') {
-            steps {
-                git 'https://github.com/iamkhush30/HeartRisk-Predictor'
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
