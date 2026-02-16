@@ -5,13 +5,13 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ml-app .'
+                bat 'docker build -t ml-app .'
             }
         }
 
         stage('Run Container') {
             steps {
-                sh 'docker run -d -p 5000:5000 ml-app'
+                bat 'docker run -d -p 5000:5000 ml-app'
             }
         }
     }
