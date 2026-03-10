@@ -141,7 +141,7 @@ function App() {
     };
 
     // Call Flask API
-    fetch("http://localhost:5000/api/predict", {
+    fetch("https://heartrisk-predictor-1jy7.onrender.com/api/predict", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
