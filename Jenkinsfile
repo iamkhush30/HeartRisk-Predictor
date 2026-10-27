@@ -26,6 +26,12 @@ pipeline {
             }
         }
 
+        stage('Run Unit & Schema Tests') {
+            steps {
+                bat 'python -m pytest test_app.py -v'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 bat 'docker build --no-cache -t ml-app .'
