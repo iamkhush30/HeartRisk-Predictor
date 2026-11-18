@@ -9,6 +9,16 @@ pipeline {
     }
 
     stages {
+        stage('Debug') {
+            steps {
+                bat '''
+                whoami
+                where docker
+                echo %PATH%
+                docker version
+                '''
+    }
+}
 
         stage('Stop & Remove Old Container') {
             steps {
