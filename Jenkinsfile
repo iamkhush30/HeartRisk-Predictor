@@ -10,58 +10,7 @@ pipeline {
     }
 
     stages {
-        stage('Diagnose') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat '''
-                    @echo off
-                    echo ===== 0. JENKINSFILE VERSION MARKER: v-diag-1 =====
-                    echo ===== 1. WHO RUNS JENKINS =====
-                    whoami
-                    sc qc Jenkins | findstr /i "SERVICE_START_NAME"
-                    echo ===== 2. PATH SEEN BY THIS BUILD =====
-                    echo %PATH%
-                    echo ===== 3. DOES DOCKER.EXE EXIST AND CAN THIS USER SEE IT =====
-                    dir "%DOCKER_BIN%\\docker.exe"
-                    echo exit code: %errorlevel%
-                    echo ===== 4. where docker =====
-                    where docker
-                    echo exit code: %errorlevel%
-                    echo ===== 5. docker client version =====
-                    "%DOCKER_BIN%\\docker.exe" --version
-                    echo exit code: %errorlevel%
-                    echo ===== 6. docker client+server version =====
-                    "%DOCKER_BIN%\\docker.exe" version
-                    echo exit code: %errorlevel%
-                    echo ===== 7. docker context and host =====
-                    "%DOCKER_BIN%\\docker.exe" context ls
-                    echo DOCKER_HOST=%DOCKER_HOST%
-                    echo ===== 8. docker engine pipes present =====
-                    dir \\\\.\\pipe\\ 2>&1 | findstr /i docker
-                    echo ===== 9. Docker processes and service =====
-                    tasklist | findstr /i docker
-                    sc query com.docker.service
-                    echo ===== 10. docker info =====
-                    "%DOCKER_BIN%\\docker.exe" info
-                    echo exit code: %errorlevel%
-                    echo ===== 11. Docker daemon.json (insecure registries) =====
-                    type "C:\\Users\\Admin\\.docker\\daemon.json"
-                    echo ===== 12. Nexus reachable? (8081 = UI, 8082 = Docker repo) =====
-                    curl -s -o NUL -w "8081 http code: %%{http_code}\\n" http://localhost:8081
-                    curl -s -o NUL -w "8082 http code: %%{http_code}\\n" http://localhost:8082/v2/
-                    echo ===== 13. Python =====
-                    "%PY_HOME%\\python.exe" --version
-                    if exist venv\\Scripts\\python.exe (venv\\Scripts\\python -m pytest --version) else (echo NO VENV IN WORKSPACE)
-                    echo ===== 14. Workspace files =====
-                    dir /b
-                    echo ===== 15. Dockerfile present? =====
-                    if exist Dockerfile (echo Dockerfile FOUND) else (echo Dockerfile MISSING)
-                    echo ===== END OF DIAGNOSIS =====
-                    exit /b 0
-                    '''
-                }
-            }
-        }
+        
 
         stage('Stop & Remove Old Container') {
             steps {
