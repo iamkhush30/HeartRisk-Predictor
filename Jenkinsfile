@@ -3,31 +3,12 @@ pipeline {
 
     environment {
         NEXUS_REGISTRY = 'host.docker.internal:8082'
-        NEXUS_REPO     = 'nexus-docker-repo'
-        NEXUS_CRED_ID  = 'nexus-credentials'   // Jenkins Credentials
-        DOCKER_HOST = 'tcp://localhost:2375' //Connects pipeline with Docker 
-        PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"        
+        NEXUS_CRED_ID  = 'nexus-credentials'
+        DOCKER_HOST    = 'tcp://localhost:2375'
+        PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"
     }
 
     stages {
-        
-
-        stage('Stop & Remove Old Container') {
-            steps {
-                bat '''
-                docker stop ml-container || exit 0
-                docker rm ml-container || exit 0
-                '''
-            }
-        }
-
-        stage('Remove Old Image') {
-            steps {
-                bat '''
-                docker rmi ml-app || exit 0
-                '''
-            }
-        }
 
         stage('Run Unit & Schema Tests') {
             options { timeout(time: 30, unit: 'MINUTES') }
@@ -42,38 +23,45 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            options { timeout(time: 40, unit: 'MINUTES') }
             steps {
-                bat 'docker build --no-cache -t ml-app .'
+                bat 'docker build -t ml-app .'
             }
         }
 
         stage('Push to Nexus') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    withCredentials([usernamePassword(credentialsId: "${env.NEXUS_CRED_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                        bat '''
-                        echo [INFO] Logging into Nexus Docker Registry at %NEXUS_REGISTRY%...
-                        docker login -u %NEXUS_USER% -p %NEXUS_PASS% %NEXUS_REGISTRY%
-                        
-                        echo [INFO] Tagging image for Nexus...
-                        docker tag ml-app %NEXUS_REGISTRY%/ml-app:%BUILD_NUMBER%
-                        docker tag ml-app %NEXUS_REGISTRY%/ml-app:latest
-                        
-                        echo [INFO] Pushing image to Nexus...
-                        docker push %NEXUS_REGISTRY%/ml-app:%BUILD_NUMBER%
-                        docker push %NEXUS_REGISTRY%/ml-app:latest
-                        
-                        docker logout %NEXUS_REGISTRY% || exit 0
-                        '''
-                    }
+                withCredentials([usernamePassword(credentialsId: "${env.NEXUS_CRED_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    bat '''
+                    echo %NEXUS_PASS%| docker login -u %NEXUS_USER% --password-stdin %NEXUS_REGISTRY%
+                    if errorlevel 1 exit /b 1
+                    docker tag ml-app %NEXUS_REGISTRY%/ml-app:%BUILD_NUMBER%
+                    docker tag ml-app %NEXUS_REGISTRY%/ml-app:latest
+                    docker push %NEXUS_REGISTRY%/ml-app:%BUILD_NUMBER%
+                    if errorlevel 1 exit /b 1
+                    docker push %NEXUS_REGISTRY%/ml-app:latest
+                    if errorlevel 1 exit /b 1
+                    docker rmi %NEXUS_REGISTRY%/ml-app:%BUILD_NUMBER%
+                    docker rmi %NEXUS_REGISTRY%/ml-app:latest
+                    docker logout %NEXUS_REGISTRY%
+                    '''
                 }
             }
         }
 
-        stage('Run Container') {
+        stage('Deploy') {
             steps {
-                bat 'docker run -d -p 5000:5000 --name ml-container ml-app'
+                bat '''
+                docker rm -f ml-container 2>nul
+                docker run -d -p 5000:5000 --name ml-container ml-app
+                '''
             }
+        }
+    }
+
+    post {
+        always {
+            bat 'docker image prune -f'
         }
     }
 }
