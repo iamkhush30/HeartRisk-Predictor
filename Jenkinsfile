@@ -8,16 +8,15 @@ pipeline {
         PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"        
     }
 
-    stages {
-        stage('Debug') {
-            steps {
-                bat '''
-                whoami
-                where docker
-                echo %PATH%
-                docker version
-                '''
+    stage('Debug') {
+    steps {
+        bat '''
+        set "PATH=C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+        where docker
+        docker version
+        '''
     }
+}
 }
 
         stage('Stop & Remove Old Container') {
