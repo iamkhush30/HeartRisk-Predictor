@@ -5,9 +5,7 @@ pipeline {
         NEXUS_REGISTRY = 'localhost:8081'
         NEXUS_REPO     = 'nexus-docker-repo'
         NEXUS_CRED_ID  = 'nexus-credentials'   // Jenkins Credentials
-        PATH = "${env.DOCKER_BIN};C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"
-
-        
+        PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"        
     }
 
     stages {
