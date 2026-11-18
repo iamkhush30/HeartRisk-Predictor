@@ -8,7 +8,8 @@ pipeline {
         PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"        
     }
 
-    stage('Diagnose') {
+    stages {
+        stage('Diagnose') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat '''
@@ -60,8 +61,6 @@ pipeline {
                 }
             }
         }
-}
-}
 
         stage('Stop & Remove Old Container') {
             steps {
@@ -82,14 +81,14 @@ pipeline {
 
         stage('Run Unit & Schema Tests') {
             options { timeout(time: 30, unit: 'MINUTES') }
-        steps {
-            bat '''
-            if not exist venv "C:\\Program Files\\Python311\\python.exe" -m venv venv
-            venv\\Scripts\\python -m pip install --default-timeout=300 --retries 10 -r requirements.txt pytest
-            if errorlevel 1 exit /b 1
-            venv\\Scripts\\python -m pytest test_app.py -v
-            '''
-    }
+            steps {
+                bat '''
+                if not exist venv "C:\\Program Files\\Python311\\python.exe" -m venv venv
+                venv\\Scripts\\python -m pip install --default-timeout=300 --retries 10 -r requirements.txt pytest
+                if errorlevel 1 exit /b 1
+                venv\\Scripts\\python -m pytest test_app.py -v
+                '''
+            }
         }
 
         stage('Build Docker Image') {
@@ -128,5 +127,3 @@ pipeline {
         }
     }
 }
-
-
