@@ -28,13 +28,15 @@ pipeline {
         }
 
         stage('Run Unit & Schema Tests') {
-            steps {
-                bat '''
-                "C:\\Program Files\\Python311\\python.exe" -m venv venv
-                venv\\Scripts\\python -m pip install -r requirements.txt pytest
-                venv\\Scripts\\python -m pytest test_app.py -v
-                '''
-            }
+            options { timeout(time: 30, unit: 'MINUTES') }
+        steps {
+            bat '''
+            if not exist venv "C:\\Program Files\\Python311\\python.exe" -m venv venv
+            venv\\Scripts\\python -m pip install --default-timeout=300 --retries 10 -r requirements.txt pytest
+            if errorlevel 1 exit /b 1
+            venv\\Scripts\\python -m pytest test_app.py -v
+            '''
+    }
         }
 
         stage('Build Docker Image') {
@@ -73,3 +75,5 @@ pipeline {
         }
     }
 }
+
+
