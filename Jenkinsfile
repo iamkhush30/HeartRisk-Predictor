@@ -29,7 +29,11 @@ pipeline {
 
         stage('Run Unit & Schema Tests') {
             steps {
-                bat 'python -m pytest test_app.py -v'
+                bat '''
+                "C:\\Program Files\\Python311\\python.exe" -m venv venv
+                venv\\Scripts\\python -m pip install -r requirements.txt pytest
+                venv\\Scripts\\python -m pytest test_app.py -v
+                '''
             }
         }
 
