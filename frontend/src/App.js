@@ -141,7 +141,7 @@ function App() {
     };
 
     // Call Flask API
-    fetch("https://heartrisk-predictor-1jy7.onrender.com/api/predict", {
+fetch(`${process.env.REACT_APP_API_URL || ""}/api/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
