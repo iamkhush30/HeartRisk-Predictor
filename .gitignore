@@ -23,3 +23,12 @@ Thumbs.db
 # Build artifacts
 dist/
 build/
+
+# Terraform provision
+**/.terraform/
+*.tfstate*
+*.tfplan*
+*.tfvars*
+crash*.log
+*.pem
+*.key
