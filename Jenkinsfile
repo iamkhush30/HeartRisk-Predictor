@@ -6,6 +6,7 @@ pipeline {
         NEXUS_CRED_ID  = 'nexus-credentials'
         DOCKER_HOST    = 'tcp://localhost:2375'
         PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;C:\\Program Files\\Python311;C:\\Program Files\\Python311\\Scripts;${env.PATH}"
+        AWS_DEFAULT_REGION = 'ap-south-1'    
     }
 
     stages {
@@ -48,8 +49,30 @@ pipeline {
                 }
             }
         }
+        stage('Push to AWS ECR') {
+            options { timeout(time: 90, unit: 'MINUTES') }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-jenkins-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    bat '''
+                    for /f %%i in ('aws sts get-caller-identity --query Account --output text') do set ACCOUNT_ID=%%i
+                    set ECR=%ACCOUNT_ID%.dkr.ecr.%AWS_DEFAULT_REGION%.amazonaws.com
+                    aws ecr get-login-password --region %AWS_DEFAULT_REGION% | docker login --username AWS --password-stdin %ECR%
+                    if errorlevel 1 exit /b 1
+                    docker tag ml-app %ECR%/ml-app:%BUILD_NUMBER%
+                    docker tag ml-app %ECR%/ml-app:latest
+                    docker push %ECR%/ml-app:%BUILD_NUMBER%
+                    if errorlevel 1 exit /b 1
+                    docker push %ECR%/ml-app:latest
+                    if errorlevel 1 exit /b 1
+                    docker rmi %ECR%/ml-app:%BUILD_NUMBER%
+                    docker rmi %ECR%/ml-app:latest
+                    docker logout %ECR%
+                    '''
+                }
+            }
+        }
 
-        stage('Deploy') {
+        stage('Remove Older') {
             steps {
                 bat '''
                 docker rm -f ml-container 2>nul
