@@ -30,7 +30,8 @@ The dataset consists of 70,000 patient records with 11 features and 1 target var
 * **ML & Data Science:** `Scikit-Learn`, `Pandas`, `NumPy`, `Matplotlib`, `Seaborn`
 * **Backend:** Flask, Flask-CORS
 * **Testing:** Pytest (Unit & Schema Validation)
-* **DevOps & CI/CD:** Jenkins (Declarative Pipeline), Docker, Sonatype Nexus Repository, Webhooks
+* **DevOps & CI/CD:** Jenkins (Declarative Pipeline), Docker, Pytest, Sonatype Nexus, AWS ECR
+* **AWS Infrastructure:** Terraform, EC2, SSM, IAM
 
 ## 🚀 Key Workflow
 1.  **Data Preprocessing:**
@@ -46,49 +47,66 @@ The dataset consists of 70,000 patient records with 11 features and 1 target var
 4.  **Evaluation:** 
     * Assessed performance using Accuracy, Precision, Recall, and F1-Score.
 
-## 🔄 CI/CD & Automated DevOps Pipeline
+## 🔄 CI/CD Pipeline
 
-The application features a fully automated, declarative CI/CD pipeline built with **Jenkins**, **Docker**, and **Sonatype Nexus**:
+The Jenkinsfile uses a declarative pipeline with five execution stages:
 
 ```
-[ Push to main ] ──( Webhook Trigger )──► [ Jenkins Declarative Pipeline ]
-                                                   │
-    ┌──────────────────────────────────────────────┴──────────────────────────────────────────────┐
-    ▼                                              ▼                                              ▼
-[ 1. Environment & Safe Cleanup ]       [ 2. Pytest & Schema Tests ]               [ 3. Docker Build ]
-  • Idempotent container/image cleanup     • Tests Flask endpoints (/api/predict)     • Base: python:3.11-slim
-  • Safe on fresh or existing agents       • Validates ML feature schema inputs       • gcc & build-essential
-                                           • Fails build before image build           • apt cache cleanup
-                                                   │
-    ┌──────────────────────────────────────────────┴──────────────────────────────────────────────┘
-    ▼                                              ▼
-[ 4. Sonatype Nexus Push ]              [ 5. Container Deployment ]
-  • Jenkins Credentials Binding            • Deploys ml-container on port 5000
-  • Tagged with ${BUILD_NUMBER} & latest   • Zero-downtime container replacement
-  • Private Docker hosted registry         • Isolated production runtime
+Source Change
+      |
+Jenkins Trigger
+      |
+Repository Checkout
+      |
+1. Run Unit & Schema Tests
+   |-- Create/reuse workspace venv
+   |-- Install requirements.txt and pytest
+   |-- Run test_app.py against Flask endpoints and ML feature schemas
+   |-- Abort before packaging if a test or install command fails
+      |
+2. Build Docker Image
+   |-- docker build -t ml-app .
+   |-- Base: python:3.11-slim
+      |
+3. Push to Sonatype Nexus
+   |-- Tag ml-app with BUILD_NUMBER and latest
+   |-- Push to nexus-docker-repo through host.docker.internal:8082
+      |
+4. Push to AWS ECR
+   |-- Resolve the AWS account ECR endpoint
+   |-- Tag ml-app with BUILD_NUMBER and latest
+   |-- Push to ap-south-1
+      |
+5. Remove Older / Replace Local Container
+   |-- Remove existing ml-container
+   |-- Run ml-app on port 5000
+      |
+Post: docker image prune -f
 ```
 
-### 🛡️ Pipeline Highlights & Engineering Solutions
+### 🛡️ Pipeline Details
 
-1. **Automated Webhook Triggering**:
-   * Pipeline automatically triggers on every push to the `main` branch via webhooks, running checkout, testing, building, tagging, and deployment with zero manual intervention.
+1. **Fail-Fast Pytest Stage**:
+   * The Jenkins stage creates or reuses a workspace virtual environment.
+   * Pytest validates Flask REST endpoint responses and ML feature transformations before Docker packaging.
+   * A failed test or dependency installation stops the pipeline.
 
-2. **Pre-Build Testing & Schema Validation (`pytest`)**:
-   * Automated test suite validates Flask REST endpoints (`/api/predict`, `/api/health`) and checks strict ML input feature schemas (BMI calculation, z-score scaling, blood pressure bounds).
-   * **Fail-Fast Protection**: Any test failure immediately aborts the pipeline, preventing unverified code or broken schemas from reaching the container build phase.
+2. **Docker Image**:
+   * The Dockerfile uses `python:3.11-slim` and installs `build-essential` and `gcc` before Python dependencies.
+   * Jenkins builds the image as `ml-app`.
 
-3. **Optimized Docker Containerization**:
-   * Built on `python:3.11-slim` for a minimal attack surface.
-   * Resolved native C-compiler errors when compiling scientific dependencies (`scikit-learn`, `numpy`) by installing `gcc` and `build-essential`, followed by cleaning package lists (`rm -rf /var/lib/apt/lists/*`) to optimize image size.
+3. **Dual Registry Publishing**:
+   * Jenkins adds both `${BUILD_NUMBER}` and `latest` tags.
+   * The tagged image is pushed to the Sonatype Nexus Docker repository and AWS ECR.
 
-4. **Artifact Management with Private Sonatype Nexus**:
-   * Every build dynamically tags images with the Jenkins build identifier (`ml-app:${BUILD_NUMBER}`) and `ml-app:latest`.
-   * Pushed to a private Sonatype Nexus Docker Hosted Repository for artifact versioning and traceability.
+4. **Local Container Replacement**:
+   * Jenkins removes an existing `ml-container` and starts `ml-app` on port 5000.
+   * The pipeline's post step runs `docker image prune -f`.
 
-5. **Production Reliability & Security Hardening**:
-   * **Credential Security**: Configured Jenkins **Credentials Binding** (`withCredentials`) for secure registry authentication, eliminating hardcoded secrets and preventing `401 Unauthorized` token expiry errors during long runs.
-   * **Least-Privilege Execution**: Configured Jenkins agent permissions to execute Docker via group membership rather than running as root.
-   * **Idempotent Agent Cleanup**: Teardown and cleanup stages handle missing containers and images safely (`|| exit 0`), ensuring flawless execution whether running on a fresh agent or existing environment.
+5. **AWS Provisioning and Deployment Scope**:
+   * Terraform in `aws-cd-terraform` provisions an ECR repository and an EC2 host with Docker, SSM access, and IAM identities.
+   * The Jenkinsfile pushes the image to AWS ECR, but it does not pull or run that image on EC2.
+   * AWS deployment is manual: the user pulls the ECR image on EC2 and starts it as a container.
 
 ## ⚙️ Installation & Usage
 
